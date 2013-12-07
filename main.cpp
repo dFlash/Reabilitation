@@ -258,17 +258,10 @@ cvWaitKey(300000);
 inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore)
 {
 
-    //qDebug()<<"fore = "<<fore.channels()<<" curr = "<<curr.channels();
-    //cv::Mat cg,bg;
-    //cv::cvtColor(curr,cg,CV_BGR2GRAY);
-    //cv::cvtColor(back,bg,CV_BGR2GRAY);
-    //qDebug()<<"fore = "<<fore.channels()<<" curr = "<<curr.channels();
     for (int i=1;i<back.rows-1;i++)
       {
           for (int j=1;j<back.cols-1;j++)
           {
-//              cv::Scalar color_c = curr.at<unsigned char>(i,j);
-//              cv::Scalar color_b = back.at<unsigned char>(i,j);
 
               if (abs((int)back.at<cv::Vec3b>(i,j)[0]-(int)curr.at<cv::Vec3b>(i,j)[0])>threshold ||
                   abs((int)back.at<cv::Vec3b>(i,j)[1]-(int)curr.at<cv::Vec3b>(i,j)[1])>threshold ||
@@ -366,7 +359,6 @@ inline void getSkeleton(cv::Mat& fore)
                 }
             }
 
-            //qDebug()<<"case 0";
 //          high=maxHigh;
             high++;
 
@@ -766,8 +758,6 @@ inline void StentifordThinning(cv::Mat& fore)
     }
 
     fore *= 255;
-
-
 
 }
 
