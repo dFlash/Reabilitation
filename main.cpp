@@ -133,11 +133,6 @@ int main(int argc, char* argv[])
     cv::Mat curr_frame,background,testImg(480,640,CV_8U);
     cv::Mat foreground(480,640,CV_8U);
 
-
-    //foreground.create(480,640,CV_8U);
-
-
-
     GUI gui;
     gui.show();
 
@@ -275,8 +270,6 @@ inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore)
               {
                  fore.at<unsigned char>(i,j) = 0;
               }
-
-
 
           }
       }
@@ -427,7 +420,6 @@ inline void getSkeleton(cv::Mat& fore)
                 }
             }
             //low=minLow;
-            //qDebug()<<"case 1";
             low--;
             break;
 
