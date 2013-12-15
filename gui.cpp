@@ -2,11 +2,10 @@
 
 GUI::GUI(QWidget *parent):QWidget(parent)
 {
-
         flag = false;
         flagNewBack = false;
         flagTestImg = false;
-        setFixedSize(200,200);
+        setFixedSize(200,250);
         move(10,10);
 
         QPushButton* push_background = new QPushButton("Set background",this);
