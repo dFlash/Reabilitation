@@ -2,6 +2,7 @@
 #include<opencv/cvaux.h>
 
 #include<cmath>
+#include<QTime>
 #include"gui.hpp"
 
 using namespace std;
@@ -10,6 +11,20 @@ const short threshold =85;//80 for test 6  110 for test 3
 inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore);
 inline void getSkeleton(cv::Mat& fore);
 inline void StentifordThinning(cv::Mat& fore);
+struct Point
+{
+    int x;
+    int y;
+
+    Point(int X, int Y)
+    {
+        x=X;
+        y=Y;
+    }
+};
+
+vector<Point> pointToDel;
+
 
 //not my func BEGIN
 void thinningIteration(cv::Mat& im, int iter)
@@ -24,6 +39,7 @@ void thinningIteration(cv::Mat& im, int iter)
             uchar p3 = im.at<uchar>(i-1, j+1);
             uchar p4 = im.at<uchar>(i, j+1);
             uchar p5 = im.at<uchar>(i+1, j+1);
+
             uchar p6 = im.at<uchar>(i+1, j);
             uchar p7 = im.at<uchar>(i+1, j-1);
             uchar p8 = im.at<uchar>(i, j-1);
@@ -138,12 +154,12 @@ int main(int argc, char* argv[])
 
     cv::namedWindow("Camera");
 
-    cv::namedWindow("Background");
+
 
     //cv::namedWindow("Fore");
 
     cv::moveWindow("Camera",200,10);
-    cv::moveWindow("Background",200,10);
+
 
 
 
@@ -194,10 +210,11 @@ int main(int argc, char* argv[])
              //       thinning(foreground);
             //getSkeleton(foreground);
 
-              StentifordThinning(foreground);
-              cv::imshow("Stentiford",foreground);
+             StentifordThinning(foreground);
+//                      getSkeleton(foreground);
+//              cv::imshow("Ros",foreground);
 
-//            cv::imshow("Fore",foreground);
+            cv::imshow("Fore",foreground);
 //            cv::imshow("Background",background);
 
         }
@@ -232,8 +249,16 @@ int main(int argc, char* argv[])
 //        testImg.copyTo(GuoHall);
 //        testImg.copyTo(Rosenfeld);
         testImg.copyTo(Stentiford);
-//        StentifordThinning(Stentiford);
-//        cv::imshow("Stentiford",Stentiford);
+
+        QTime time;
+        time.start();
+ StentifordThinning(Stentiford);
+//        thinning(ZhangSuen);
+        qDebug()<<"worked = "<<time.elapsed();
+        cv::imshow("Stentiford",Stentiford);
+//        cv::imshow("Zhang-Suen",ZhangSuen);
+
+
 
 //        thinning(ZhangSuen);
 //        thinningGuoHall(GuoHall);
@@ -277,10 +302,9 @@ inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore)
 
 inline void getSkeleton(cv::Mat& fore)
 {
-    qDebug()<<"begin";
-    int high = 1, low = 479, right = 639, left = 1;
+
     int dir = 0;
-    while(dir<600)
+    while(dir<500)
     {
 
         switch(dir%4)
@@ -345,15 +369,10 @@ inline void getSkeleton(cv::Mat& fore)
                         {
                             continue;
                         }
-//                        if(maxHigh>j)
-//                            maxHigh = j;
 
                     }
                 }
             }
-
-//          high=maxHigh;
-            high++;
 
             break;
 
@@ -419,8 +438,7 @@ inline void getSkeleton(cv::Mat& fore)
                     }
                 }
             }
-            //low=minLow;
-            low--;
+
             break;
 
         //слева направо
@@ -485,8 +503,6 @@ inline void getSkeleton(cv::Mat& fore)
                     }
                 }
             }
-            left++;
-
 
             break;
 
@@ -551,15 +567,13 @@ inline void getSkeleton(cv::Mat& fore)
                     }
                 }
             }
-            right--;
-
             break;
 
         }
         dir++;
     }
 
-        qDebug()<<"end";
+
 
 }
 
@@ -568,7 +582,15 @@ inline void getSkeleton(cv::Mat& fore)
 inline void StentifordThinning(cv::Mat& fore)
 {
     fore /= 255;
-    //mask1
+
+    bool isFirst = true;
+
+  while (!pointToDel.empty() || isFirst)
+  {
+
+      pointToDel.clear();
+
+      //mask1
     for (int i = 2; i < fore.rows-2; i++)
     {
         for (int j = 2; j < fore.cols-2; j++)
@@ -589,15 +611,29 @@ inline void StentifordThinning(cv::Mat& fore)
                 }
                 else
                 {
+                    uchar p2 = V(i-1, j);
+                    uchar p3 = V(i-1, j+1);
+                    uchar p4 = V(i, j+1);
+                    uchar p5 = V(i+1, j+1);
 
-                    int cn = (V(i,j+1)-V(i,j+1)*V(i+1,j)*V(i+1,j+1))+
-                            (V(i+1,j)-V(i+1,j)*V(i+1,j-1)*V(i,j-1))+
-                            (V(i,j-1)-V(i,j-1)*V(i-1,j-1)*V(i-1,j))+
-                            (V(i-1,j)-V(i-1,j)*V(i-1,j+1)*V(i,j+1));
+                    uchar p6 = V(i+1, j);
+                    uchar p7 = V(i+1, j-1);
+                    uchar p8 = V(i, j-1);
+                    uchar p9 = V(i-1, j-1);
+
+                    int cn  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                             (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                             (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                             (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
+
+//                    int cn = (abs(V(i,j+1)-1)-abs((V(i,j+1)-1)*(V(i+1,j)-1)*(V(i+1,j+1)-1)))+
+//                            (abs(V(i+1,j)-1)-abs((V(i+1,j)-1)*(V(i+1,j-1)-1)*(V(i,j-1)-1)))+
+//                            (abs(V(i,j-1)-1)-abs((V(i,j-1)-1)*(V(i-1,j-1)-1)*(V(i-1,j)-1)))+
+//                            (abs(V(i-1,j)-1)-abs((V(i-1,j)-1)*(V(i-1,j+1)-1)*(V(i,j+1)-1)));
                     if (cn==1)
                     {
 
-                        V(i,j)=0;
+                        pointToDel.push_back(Point(i,j));
                     }
                     else
                     {
@@ -635,15 +671,24 @@ inline void StentifordThinning(cv::Mat& fore)
                 }
                 else
                 {
+                    uchar p2 = V(i-1, j);
+                    uchar p3 = V(i-1, j+1);
+                    uchar p4 = V(i, j+1);
+                    uchar p5 = V(i+1, j+1);
 
-                    int cn = (V(i,j+1)-V(i,j+1)*V(i+1,j)*V(i+1,j+1))+
-                            (V(i+1,j)-V(i+1,j)*V(i+1,j-1)*V(i,j-1))+
-                            (V(i,j-1)-V(i,j-1)*V(i-1,j-1)*V(i-1,j))+
-                            (V(i-1,j)-V(i-1,j)*V(i-1,j+1)*V(i,j+1));
+                    uchar p6 = V(i+1, j);
+                    uchar p7 = V(i+1, j-1);
+                    uchar p8 = V(i, j-1);
+                    uchar p9 = V(i-1, j-1);
+
+                    int cn  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                             (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                             (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                             (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
                     if (cn==1)
                     {
 
-                        V(i,j)=0;
+                        pointToDel.push_back(Point(i,j));
                     }
                     else
                     {
@@ -680,15 +725,24 @@ inline void StentifordThinning(cv::Mat& fore)
                 }
                 else
                 {
+                    uchar p2 = V(i-1, j);
+                    uchar p3 = V(i-1, j+1);
+                    uchar p4 = V(i, j+1);
+                    uchar p5 = V(i+1, j+1);
 
-                    int cn = (V(i,j+1)-V(i,j+1)*V(i+1,j)*V(i+1,j+1))+
-                            (V(i+1,j)-V(i+1,j)*V(i+1,j-1)*V(i,j-1))+
-                            (V(i,j-1)-V(i,j-1)*V(i-1,j-1)*V(i-1,j))+
-                            (V(i-1,j)-V(i-1,j)*V(i-1,j+1)*V(i,j+1));
+                    uchar p6 = V(i+1, j);
+                    uchar p7 = V(i+1, j-1);
+                    uchar p8 = V(i, j-1);
+                    uchar p9 = V(i-1, j-1);
+
+                    int cn  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                             (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                             (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                             (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
                     if (cn==1)
                     {
 
-                        V(i,j)=0;
+                        pointToDel.push_back(Point(i,j));
                     }
                     else
                     {
@@ -725,15 +779,24 @@ inline void StentifordThinning(cv::Mat& fore)
                 }
                 else
                 {
+                    uchar p2 = V(i-1, j);
+                    uchar p3 = V(i-1, j+1);
+                    uchar p4 = V(i, j+1);
+                    uchar p5 = V(i+1, j+1);
 
-                    int cn = (V(i,j+1)-V(i,j+1)*V(i+1,j)*V(i+1,j+1))+
-                            (V(i+1,j)-V(i+1,j)*V(i+1,j-1)*V(i,j-1))+
-                            (V(i,j-1)-V(i,j-1)*V(i-1,j-1)*V(i-1,j))+
-                            (V(i-1,j)-V(i-1,j)*V(i-1,j+1)*V(i,j+1));
+                    uchar p6 = V(i+1, j);
+                    uchar p7 = V(i+1, j-1);
+                    uchar p8 = V(i, j-1);
+                    uchar p9 = V(i-1, j-1);
+
+                    int cn  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                             (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                             (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                             (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
                     if (cn==1)
                     {
 
-                        V(i,j)=0;
+                        pointToDel.push_back(Point(i,j));
                     }
                     else
                     {
@@ -748,6 +811,15 @@ inline void StentifordThinning(cv::Mat& fore)
             }
         }
     }
+
+    for (vector<Point>::iterator it = pointToDel.begin(); it!=pointToDel.end();it++)
+    {
+        V(it->x,it->y)=0;
+    }
+
+    if(isFirst) isFirst=false;
+
+ }
 
     fore *= 255;
 

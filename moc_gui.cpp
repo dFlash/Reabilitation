@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'gui.hpp'
 **
-** Created: Sun Oct 20 13:26:32 2013
+** Created: Sat Dec 21 18:01:04 2013
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.1)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_GUI[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-       2,   14, // methods
+       3,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -33,12 +33,14 @@ static const uint qt_meta_data_GUI[] = {
  // slots: signature, parameters, type, tag, flags
        5,    4,    4,    4, 0x0a,
       23,    4,    4,    4, 0x0a,
+      35,    4,    4,    4, 0x0a,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_GUI[] = {
     "GUI\0\0slot_background()\0slot_exit()\0"
+    "slot_TestImg()\0"
 };
 
 void GUI::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -49,6 +51,7 @@ void GUI::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **
         switch (_id) {
         case 0: _t->slot_background(); break;
         case 1: _t->slot_exit(); break;
+        case 2: _t->slot_TestImg(); break;
         default: ;
         }
     }
@@ -87,9 +90,9 @@ int GUI::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 2)
+        if (_id < 3)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 2;
+        _id -= 3;
     }
     return _id;
 }
