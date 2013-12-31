@@ -11,6 +11,10 @@ const short threshold =85;//80 for test 6  110 for test 3
 inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore);
 inline void getSkeleton(cv::Mat& fore);
 inline void StentifordThinning(cv::Mat& fore);
+
+
+inline cv::Mat morphSkeleton(cv::Mat& img);
+
 struct Point
 {
     int x;
@@ -210,7 +214,7 @@ int main(int argc, char* argv[])
              //       thinning(foreground);
             //getSkeleton(foreground);
 
-             StentifordThinning(foreground);
+//             StentifordThinning(foreground);
 //                      getSkeleton(foreground);
 //              cv::imshow("Ros",foreground);
 
@@ -243,20 +247,25 @@ int main(int argc, char* argv[])
     }
 
 //        getSkeleton(testImg);
-        cv::Mat ZhangSuen,GuoHall,Rosenfeld,Stentiford;
+        cv::Mat ZhangSuen,GuoHall,Rosenfeld,Stentiford, morph,morphSkel;
 
 //        testImg.copyTo(ZhangSuen);
 //        testImg.copyTo(GuoHall);
 //        testImg.copyTo(Rosenfeld);
-        testImg.copyTo(Stentiford);
+//        testImg.copyTo(Stentiford);
+        testImg.copyTo(morph);
 
         QTime time;
         time.start();
- StentifordThinning(Stentiford);
+
+        morphSkel = morphSkeleton(morph);
+//        getSkeleton(Rosenfeld);
+//        StentifordThinning(Stentiford);
 //        thinning(ZhangSuen);
         qDebug()<<"worked = "<<time.elapsed();
-        cv::imshow("Stentiford",Stentiford);
+//        cv::imshow("Stentiford",Stentiford);
 //        cv::imshow("Zhang-Suen",ZhangSuen);
+        cv::imshow("morph",morphSkel);
 
 
 
@@ -303,10 +312,13 @@ inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore)
 inline void getSkeleton(cv::Mat& fore)
 {
 
+    fore /= 255;
     int dir = 0;
-    while(dir<500)
+    bool isDel=true;
+    while(isDel)
     {
 
+        isDel = false;
         switch(dir%4)
         {
         //сверху вниз
@@ -317,7 +329,7 @@ inline void getSkeleton(cv::Mat& fore)
 
                 for (int j = 1; j < fore.rows - 1; j++)
                 {
-                    int num = 0;
+
 
                     if (fore.at<unsigned char>(j,i)==0)
                     {
@@ -325,45 +337,32 @@ inline void getSkeleton(cv::Mat& fore)
                     }
                     else
                     {
-                        if (fore.at<unsigned char>(j,i-1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j,i+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j-1,i)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j+1,i)==255)
-                        {
-                            num++;
-                        }
-                        //------
-                        if (fore.at<unsigned char>(j+1,i+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j+1,i-1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j-1,i+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j-1,i-1)==255)
-                        {
-                            num++;
-                        }
+                        uchar p2 = fore.at<uchar>(j-1, i);
+                        uchar p3 = fore.at<uchar>(j-1, i+1);
+                        uchar p4 = fore.at<uchar>(j, i+1);
+                        uchar p5 = fore.at<uchar>(j+1, i+1);
+
+                        uchar p6 = fore.at<uchar>(j+1, i);
+                        uchar p7 = fore.at<uchar>(j+1, i-1);
+                        uchar p8 = fore.at<uchar>(j, i-1);
+                        uchar p9 = fore.at<uchar>(j-1, i-1);
+
+                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
 
 
-                        if (num > 2 || num==0)
+                        uchar num = p2+p3+p4+p5+p6+p7+p8+p9;
+                        if (num > 2 /*|| num==0*/ && A==1)
                         {
+                            isDel = true;
+
+
+
+                           // if (!p3 && p8 || !p9 && p4 || p4 && p8){
                             fore.at<unsigned char>(j,i)=0;
-                            break;
+                            break;//}
                         }
                         else
                         {
@@ -385,51 +384,39 @@ inline void getSkeleton(cv::Mat& fore)
 
                 for (int j = fore.rows-1; j > 1 ; j--)
                 {
-                    int num = 0;
+
                     if (fore.at<unsigned char>(j,i)==0)
                     {
                         continue;
                     }
                     else
                     {
-                        if (fore.at<unsigned char>(j,i-1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j,i+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j-1,i)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j+1,i)==255)
-                        {
-                            num++;
-                        }
-                        //----------
-                        if (fore.at<unsigned char>(j+1,i+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j+1,i-1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j-1,i+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(j-1,i-1)==255)
-                        {
-                            num++;
-                        }
+                        uchar p2 = fore.at<uchar>(j-1, i);
+                        uchar p3 = fore.at<uchar>(j-1, i+1);
+                        uchar p4 = fore.at<uchar>(j, i+1);
+                        uchar p5 = fore.at<uchar>(j+1, i+1);
 
-                        if (num > 2 || num==0)
+                        uchar p6 = fore.at<uchar>(j+1, i);
+                        uchar p7 = fore.at<uchar>(j+1, i-1);
+                        uchar p8 = fore.at<uchar>(j, i-1);
+                        uchar p9 = fore.at<uchar>(j-1, i-1);
+
+
+                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
+
+
+                        uchar num = p2+p3+p4+p5+p6+p7+p8+p9;
+                        if (num > 2 /*|| num==0*/ && A==1)
                         {
-                            fore.at<unsigned char>(j,i)=0;
-                            break;
+                           isDel = true;
+
+
+                          //if (!p7 && p4 || !p5 && p8 || p8 && p4){
+                           fore.at<unsigned char>(j,i)=0;
+                            break;//}
                         }
                         else
                         {
@@ -449,52 +436,37 @@ inline void getSkeleton(cv::Mat& fore)
 
                 for (int j = 1; j < fore.cols - 1; j++)
                 {
-                    int num = 0;
+
                     if (fore.at<unsigned char>(i,j)==0)
                     {
                         continue;
                     }
                     else
                     {
-                        if (fore.at<unsigned char>(i,j-1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i,j+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i-1,j)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i+1,j)==255)
-                        {
-                            num++;
-                        }
-                        //----------
-                        if (fore.at<unsigned char>(i-1,j-1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i-1,j+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i+1,j+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i+1,j-1)==255)
-                        {
-                            num++;
-                        }
+                        uchar p2 = fore.at<uchar>(i-1, j);
+                        uchar p3 = fore.at<uchar>(i-1, j+1);
+                        uchar p4 = fore.at<uchar>(i, j+1);
+                        uchar p5 = fore.at<uchar>(i+1, j+1);
+
+                        uchar p6 = fore.at<uchar>(i+1, j);
+                        uchar p7 = fore.at<uchar>(i+1, j-1);
+                        uchar p8 = fore.at<uchar>(i, j-1);
+                        uchar p9 = fore.at<uchar>(i-1, j-1);
+
+                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
 
 
-                        if (num > 2 || num==0)
+                        uchar num = p2+p3+p4+p5+p6+p7+p8+p9;
+                       if (num > 2 /*|| num==0*/ && A==1)
                         {
+                            isDel = true;
+
+                           // if (!p9 && p6 || !p7 && p2 || p2 && p6){
                             fore.at<unsigned char>(i,j)=0;
-                            break;
+                            break;//}
                         }
                         else
                         {
@@ -514,51 +486,42 @@ inline void getSkeleton(cv::Mat& fore)
 
                 for (int j = fore.cols - 1; j > 1; j--)
                 {
-                    int num = 0;
+
                     if (fore.at<unsigned char>(i,j)==0)
                     {
                         continue;
                     }
                     else
                     {
-                        if (fore.at<unsigned char>(i,j-1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i,j+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i-1,j)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i+1,j)==255)
-                        {
-                            num++;
-                        }
-                        //----------
-                        if (fore.at<unsigned char>(i-1,j-1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i-1,j+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i+1,j+1)==255)
-                        {
-                            num++;
-                        }
-                        if (fore.at<unsigned char>(i+1,j-1)==255)
-                        {
-                            num++;
-                        }
+                        uchar p2 = fore.at<uchar>(i-1, j);
+                        uchar p3 = fore.at<uchar>(i-1, j+1);
+                        uchar p4 = fore.at<uchar>(i, j+1);
+                        uchar p5 = fore.at<uchar>(i+1, j+1);
 
-                        if (num > 2 || num==0)
+                        uchar p6 = fore.at<uchar>(i+1, j);
+                        uchar p7 = fore.at<uchar>(i+1, j-1);
+                        uchar p8 = fore.at<uchar>(i, j-1);
+                        uchar p9 = fore.at<uchar>(i-1, j-1);
+
+
+                        uchar num = p2+p3+p4+p5+p6+p7+p8+p9;
+
+
+
+                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
+
+
+
+                        if (num > 2 /*|| num==0*/ && A==1)
                         {
+                            isDel = true;
+
+                            //if (!p5 && p2 || !p3 && p6 || p6 && p2){
                             fore.at<unsigned char>(i,j)=0;
-                            break;
+                            break;//}
                         }
                         else
                         {
@@ -574,6 +537,9 @@ inline void getSkeleton(cv::Mat& fore)
     }
 
 
+    qDebug()<<"dir = "<<dir;
+
+    fore *= 255;
 
 }
 
@@ -822,6 +788,35 @@ inline void StentifordThinning(cv::Mat& fore)
  }
 
     fore *= 255;
+
+}
+
+
+inline cv::Mat morphSkeleton(cv::Mat& img)
+{
+    cv::Mat skel(img.size(), CV_8UC1, cv::Scalar(0));
+    cv::Mat temp(img.size(), CV_8UC1);
+
+    cv::Mat element = cv::getStructuringElement(cv::MORPH_ERODE, cv::Size(3, 3));
+
+    bool done;
+    do
+    {
+      cv::morphologyEx(img, temp, cv::MORPH_OPEN, element);
+      cv::bitwise_not(temp, temp);
+      cv::bitwise_and(img, temp, temp);
+      cv::bitwise_or(skel, temp, skel);
+      cv::erode(img, img, element);
+
+      double max;
+      cv::minMaxLoc(img, 0, &max);
+      done = (max == 0);
+    } while (!done);
+
+
+    return skel;
+
+
 
 }
 
