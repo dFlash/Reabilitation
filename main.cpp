@@ -139,10 +139,7 @@ void thinningGuoHall(cv::Mat& im)
 int main(int argc, char* argv[])
 {
 
-
     QApplication app(argc,argv);
-
-
 
     CvCapture* capture = NULL;
 
@@ -158,18 +155,12 @@ int main(int argc, char* argv[])
 
     cv::namedWindow("Camera");
 
-
-
     //cv::namedWindow("Fore");
 
     cv::moveWindow("Camera",200,10);
 
-
-
-
 //    cv::BackgroundSubtractorMOG2 bgsub;
 //    std::vector<std::vector<cv::Point> > contours;
-
 
         while(true)
     {
@@ -246,36 +237,48 @@ int main(int argc, char* argv[])
 
     }
 
-//        getSkeleton(testImg);
         cv::Mat ZhangSuen,GuoHall,Rosenfeld,Stentiford, morph,morphSkel;
 
-//        testImg.copyTo(ZhangSuen);
-//        testImg.copyTo(GuoHall);
-//        testImg.copyTo(Rosenfeld);
-//        testImg.copyTo(Stentiford);
+        testImg.copyTo(ZhangSuen);
+        testImg.copyTo(GuoHall);
+        testImg.copyTo(Rosenfeld);
+        testImg.copyTo(Stentiford);
         testImg.copyTo(morph);
 
         QTime time;
+
+        //morphology work
         time.start();
-
         morphSkel = morphSkeleton(morph);
-//        getSkeleton(Rosenfeld);
-//        StentifordThinning(Stentiford);
-//        thinning(ZhangSuen);
-        qDebug()<<"worked = "<<time.elapsed();
-//        cv::imshow("Stentiford",Stentiford);
-//        cv::imshow("Zhang-Suen",ZhangSuen);
-        cv::imshow("morph",morphSkel);
+        qDebug()<<"Morphology worked = "<<time.elapsed();
+        cv::imshow("morphology",morphSkel);
+
+        //Rosenfeld work
+        time.start();
+        getSkeleton(Rosenfeld);
+        qDebug()<<"Rosenfeld worked = "<<time.elapsed();
+        cv::imshow("Rosenfeld",Rosenfeld);
+
+        //Zhang-Suen work
+        time.start();
+        thinning(ZhangSuen);
+        qDebug()<<"Zhang-Suen worked = "<<time.elapsed();
+        cv::imshow("Zhang-Suen",ZhangSuen);
+
+        //Guo-Hall work
+        time.start();
+        thinningGuoHall(GuoHall);
+        qDebug()<<"Guo-Hall worked = "<<time.elapsed();
+        cv::imshow("Guo-Hall",GuoHall);
+
+        //Stentiford work
+        time.start();
+        StentifordThinning(Stentiford);
+        qDebug()<<"Stentiford worked = "<<time.elapsed();
+        cv::imshow("Stentiford",Stentiford);
 
 
-
-//        thinning(ZhangSuen);
-//        thinningGuoHall(GuoHall);
-//        getSkeleton(Rosenfeld);
-//        cv::imshow("Zhang-Suen",ZhangSuen);
-//        cv::imshow("Guo-Hall",GuoHall);
-//        cv::imshow("Rosenfeld",Rosenfeld);
-cvWaitKey(300000);
+        cv::waitKey(900000);
 
 
     cvReleaseCapture(&capture);
@@ -347,14 +350,14 @@ inline void getSkeleton(cv::Mat& fore)
                         uchar p8 = fore.at<uchar>(j, i-1);
                         uchar p9 = fore.at<uchar>(j-1, i-1);
 
-                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
-                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
-                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
-                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
+//                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+//                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+//                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+//                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
 
 
                         uchar num = p2+p3+p4+p5+p6+p7+p8+p9;
-                        if (num > 2 /*|| num==0*/ && A==1)
+                        if (num > 2 || num==0)
                         {
                             isDel = true;
 
@@ -402,14 +405,14 @@ inline void getSkeleton(cv::Mat& fore)
                         uchar p9 = fore.at<uchar>(j-1, i-1);
 
 
-                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
-                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
-                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
-                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
+                        //                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                        //                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                        //                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                        //                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
 
 
                         uchar num = p2+p3+p4+p5+p6+p7+p8+p9;
-                        if (num > 2 /*|| num==0*/ && A==1)
+                        if (num > 2 || num==0)
                         {
                            isDel = true;
 
@@ -453,14 +456,14 @@ inline void getSkeleton(cv::Mat& fore)
                         uchar p8 = fore.at<uchar>(i, j-1);
                         uchar p9 = fore.at<uchar>(i-1, j-1);
 
-                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
-                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
-                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
-                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
+                        //                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                        //                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                        //                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                        //                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
 
 
                         uchar num = p2+p3+p4+p5+p6+p7+p8+p9;
-                       if (num > 2 /*|| num==0*/ && A==1)
+                        if (num > 2 || num==0)
                         {
                             isDel = true;
 
@@ -504,18 +507,18 @@ inline void getSkeleton(cv::Mat& fore)
                         uchar p9 = fore.at<uchar>(i-1, j-1);
 
 
+
+
+
+
+                        //                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                        //                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
+                        //                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
+                        //                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
+
+
                         uchar num = p2+p3+p4+p5+p6+p7+p8+p9;
-
-
-
-                        int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
-                                 (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
-                                 (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
-                                 (p8 == 0 && p9 == 1) + (p9 == 0 && p2 == 1);
-
-
-
-                        if (num > 2 /*|| num==0*/ && A==1)
+                        if (num > 2 || num==0)
                         {
                             isDel = true;
 
@@ -535,9 +538,6 @@ inline void getSkeleton(cv::Mat& fore)
         }
         dir++;
     }
-
-
-    qDebug()<<"dir = "<<dir;
 
     fore *= 255;
 
@@ -795,24 +795,22 @@ inline void StentifordThinning(cv::Mat& fore)
 inline cv::Mat morphSkeleton(cv::Mat& img)
 {
     cv::Mat skel(img.size(), CV_8UC1, cv::Scalar(0));
-    cv::Mat temp(img.size(), CV_8UC1);
+    cv::Mat temp;
+    cv::Mat eroded;
 
     cv::Mat element = cv::getStructuringElement(cv::MORPH_ERODE, cv::Size(3, 3));
 
     bool done;
     do
     {
-      cv::morphologyEx(img, temp, cv::MORPH_OPEN, element);
-      cv::bitwise_not(temp, temp);
-      cv::bitwise_and(img, temp, temp);
+      cv::erode(img, eroded, element);
+      cv::dilate(eroded, temp, element); // temp = open(img)
+      cv::subtract(img, temp, temp);
       cv::bitwise_or(skel, temp, skel);
-      cv::erode(img, img, element);
+      eroded.copyTo(img);
 
-      double max;
-      cv::minMaxLoc(img, 0, &max);
-      done = (max == 0);
+      done = (cv::countNonZero(img) == 0);
     } while (!done);
-
 
     return skel;
 
