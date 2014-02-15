@@ -377,26 +377,16 @@ int main(int argc, char* argv[])
 
 
         IplImage* dst = cvCloneImage(&src);
-        //32Fの方が都合が良い
+
         IplImage* src_w = cvCreateImage(cvGetSize(&src), IPL_DEPTH_32F, 1);
         IplImage* src_b = cvCreateImage(cvGetSize(&src), IPL_DEPTH_32F, 1);
         IplImage* src_f = cvCreateImage(cvGetSize(&src), IPL_DEPTH_32F, 1);
         cvScale(&src, src_f, 1/255.0, 0);
-        //原画像を2値化(しきい値は用途に合わせて考える)
-        //src_f:2値化した画像(32F)
-        //src_w:作業バッファ
-        //src_b:作業バッファ(反転)
+
         cvThreshold(src_f,src_f,0.5,1.0,CV_THRESH_BINARY);
         cvThreshold(src_f,src_w,0.5,1.0,CV_THRESH_BINARY);
         cvThreshold(src_f,src_b,0.5,1.0,CV_THRESH_BINARY_INV);
 
-
-
-
-        //デバッグ用
-        //cvNamedWindow("src",1);
-        //cvShowImage("src",src);
-        //1ターンでマッチしてなければ終了
         double sum=1;
 
         time.start();
