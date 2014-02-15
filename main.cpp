@@ -1,6 +1,10 @@
 #include<opencv2/highgui/highgui.hpp>
 #include<opencv/cvaux.h>
 
+
+#include <opencv/cv.h>
+#include <opencv/highgui.h>
+
 #include<cmath>
 #include<QTime>
 #include"gui.hpp"
@@ -11,6 +15,83 @@ const short threshold =85;//80 for test 6  110 for test 3
 inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore);
 inline void getSkeleton(cv::Mat& fore);
 inline void StentifordThinning(cv::Mat& fore);
+
+
+//японский код
+
+void myThinningInit(CvMat** kpw, CvMat** kpb)
+{
+  //cvFilter2D用のカーネル
+  //アルゴリズムでは白、黒のマッチングとなっているのをkpwカーネルと二値画像、
+  //kpbカーネルと反転した二値画像の2組に分けて畳み込み、その後でANDをとる
+  for (int i=0; i<8; i++){
+    *(kpw+i) = cvCreateMat(3, 3, CV_8UC1);
+    *(kpb+i) = cvCreateMat(3, 3, CV_8UC1);
+    cvSet(*(kpw+i), cvRealScalar(0), NULL);
+    cvSet(*(kpb+i), cvRealScalar(0), NULL);
+  }
+  //cvSet2Dはy,x(row,column)の順となっている点に注意
+  //kernel1
+  cvSet2D(*(kpb+0), 0, 0, cvRealScalar(1));
+  cvSet2D(*(kpb+0), 0, 1, cvRealScalar(1));
+  cvSet2D(*(kpb+0), 1, 0, cvRealScalar(1));
+  cvSet2D(*(kpw+0), 1, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+0), 1, 2, cvRealScalar(1));
+  cvSet2D(*(kpw+0), 2, 1, cvRealScalar(1));
+  //kernel2
+  cvSet2D(*(kpb+1), 0, 0, cvRealScalar(1));
+  cvSet2D(*(kpb+1), 0, 1, cvRealScalar(1));
+  cvSet2D(*(kpb+1), 0, 2, cvRealScalar(1));
+  cvSet2D(*(kpw+1), 1, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+1), 2, 0, cvRealScalar(1));
+  cvSet2D(*(kpw+1), 2, 1, cvRealScalar(1));
+  //kernel3
+  cvSet2D(*(kpb+2), 0, 1, cvRealScalar(1));
+  cvSet2D(*(kpb+2), 0, 2, cvRealScalar(1));
+  cvSet2D(*(kpb+2), 1, 2, cvRealScalar(1));
+  cvSet2D(*(kpw+2), 1, 0, cvRealScalar(1));
+  cvSet2D(*(kpw+2), 1, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+2), 2, 1, cvRealScalar(1));
+  //kernel4
+  cvSet2D(*(kpb+3), 0, 2, cvRealScalar(1));
+  cvSet2D(*(kpb+3), 1, 2, cvRealScalar(1));
+  cvSet2D(*(kpb+3), 2, 2, cvRealScalar(1));
+  cvSet2D(*(kpw+3), 0, 0, cvRealScalar(1));
+  cvSet2D(*(kpw+3), 1, 0, cvRealScalar(1));
+  cvSet2D(*(kpw+3), 1, 1, cvRealScalar(1));
+  //kernel5
+  cvSet2D(*(kpb+4), 1, 2, cvRealScalar(1));
+  cvSet2D(*(kpb+4), 2, 2, cvRealScalar(1));
+  cvSet2D(*(kpb+4), 2, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+4), 0, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+4), 1, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+4), 1, 0, cvRealScalar(1));
+  //kernel6
+  cvSet2D(*(kpb+5), 2, 0, cvRealScalar(1));
+  cvSet2D(*(kpb+5), 2, 1, cvRealScalar(1));
+  cvSet2D(*(kpb+5), 2, 2, cvRealScalar(1));
+  cvSet2D(*(kpw+5), 0, 2, cvRealScalar(1));
+  cvSet2D(*(kpw+5), 0, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+5), 1, 1, cvRealScalar(1));
+  //kernel7
+  cvSet2D(*(kpb+6), 1, 0, cvRealScalar(1));
+  cvSet2D(*(kpb+6), 2, 0, cvRealScalar(1));
+  cvSet2D(*(kpb+6), 2, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+6), 0, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+6), 1, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+6), 1, 2, cvRealScalar(1));
+  //kernel8
+  cvSet2D(*(kpb+7), 0, 0, cvRealScalar(1));
+  cvSet2D(*(kpb+7), 1, 0, cvRealScalar(1));
+  cvSet2D(*(kpb+7), 2, 0, cvRealScalar(1));
+  cvSet2D(*(kpw+7), 1, 1, cvRealScalar(1));
+  cvSet2D(*(kpw+7), 1, 2, cvRealScalar(1));
+  cvSet2D(*(kpw+7), 2, 2, cvRealScalar(1));
+}
+
+//японский код _КОНЕЦ
+
+
 
 
 inline cv::Mat morphSkeleton(cv::Mat& img);
@@ -162,6 +243,16 @@ int main(int argc, char* argv[])
 //    cv::BackgroundSubtractorMOG2 bgsub;
 //    std::vector<std::vector<cv::Point> > contours;
 
+ //японский
+    CvMat** kpb = new CvMat *[8];
+    CvMat** kpw = new CvMat *[8];
+    myThinningInit(kpw, kpb);
+
+     IplImage src;
+
+ //японский  код
+
+
         while(true)
     {
 
@@ -170,7 +261,9 @@ int main(int argc, char* argv[])
 
         cv::imshow("Camera",curr_frame);
 
+         //японский
 
+         //японский
 
         if (gui.flagNewBack)
         {
@@ -237,46 +330,106 @@ int main(int argc, char* argv[])
 
     }
 
-        cv::Mat ZhangSuen,GuoHall,Rosenfeld,Stentiford, morph,morphSkel;
+//        cv::Mat ZhangSuen,GuoHall,Rosenfeld,Stentiford, morph,morphSkel;
 
-        testImg.copyTo(ZhangSuen);
-        testImg.copyTo(GuoHall);
-        testImg.copyTo(Rosenfeld);
-        testImg.copyTo(Stentiford);
-        testImg.copyTo(morph);
+//        testImg.copyTo(ZhangSuen);
+//        testImg.copyTo(GuoHall);
+//        testImg.copyTo(Rosenfeld);
+//        testImg.copyTo(Stentiford);
+//        testImg.copyTo(morph);
 
-        QTime time;
+          QTime time;
 
-        //morphology work
+//        //morphology work
+//        time.start();
+//        morphSkel = morphSkeleton(morph);
+//        qDebug()<<"Morphology worked = "<<time.elapsed();
+//        cv::imshow("morphology",morphSkel);
+
+//        //Rosenfeld work
+//        time.start();
+//        getSkeleton(Rosenfeld);
+//        qDebug()<<"Rosenfeld worked = "<<time.elapsed();
+//        cv::imshow("Rosenfeld",Rosenfeld);
+
+//        //Zhang-Suen work
+//        time.start();
+//        thinning(ZhangSuen);
+//        qDebug()<<"Zhang-Suen worked = "<<time.elapsed();
+//        cv::imshow("Zhang-Suen",ZhangSuen);
+
+//        //Guo-Hall work
+//        time.start();
+//        thinningGuoHall(GuoHall);
+//        qDebug()<<"Guo-Hall worked = "<<time.elapsed();
+//        cv::imshow("Guo-Hall",GuoHall);
+
+//        //Stentiford work
+//        time.start();
+//        StentifordThinning(Stentiford);
+//        qDebug()<<"Stentiford worked = "<<time.elapsed();
+//        cv::imshow("Stentiford",Stentiford);
+
+        //японский
+
+
+        src = foreground.operator IplImage();
+
+
+        IplImage* dst = cvCloneImage(&src);
+        //32Fの方が都合が良い
+        IplImage* src_w = cvCreateImage(cvGetSize(&src), IPL_DEPTH_32F, 1);
+        IplImage* src_b = cvCreateImage(cvGetSize(&src), IPL_DEPTH_32F, 1);
+        IplImage* src_f = cvCreateImage(cvGetSize(&src), IPL_DEPTH_32F, 1);
+        cvScale(&src, src_f, 1/255.0, 0);
+        //原画像を2値化(しきい値は用途に合わせて考える)
+        //src_f:2値化した画像(32F)
+        //src_w:作業バッファ
+        //src_b:作業バッファ(反転)
+        cvThreshold(src_f,src_f,0.5,1.0,CV_THRESH_BINARY);
+        cvThreshold(src_f,src_w,0.5,1.0,CV_THRESH_BINARY);
+        cvThreshold(src_f,src_b,0.5,1.0,CV_THRESH_BINARY_INV);
+
+
+
+
+        //デバッグ用
+        //cvNamedWindow("src",1);
+        //cvShowImage("src",src);
+        //1ターンでマッチしてなければ終了
+        double sum=1;
+
         time.start();
-        morphSkel = morphSkeleton(morph);
-        qDebug()<<"Morphology worked = "<<time.elapsed();
-        cv::imshow("morphology",morphSkel);
 
-        //Rosenfeld work
-        time.start();
-        getSkeleton(Rosenfeld);
-        qDebug()<<"Rosenfeld worked = "<<time.elapsed();
-        cv::imshow("Rosenfeld",Rosenfeld);
+        while(sum>0){
+          sum=0;
+          for (int i=0; i<8; i++){
+            cvFilter2D(src_w, src_w, *(kpw+i));
+            cvFilter2D(src_b, src_b, *(kpb+i));
 
-        //Zhang-Suen work
-        time.start();
-        thinning(ZhangSuen);
-        qDebug()<<"Zhang-Suen worked = "<<time.elapsed();
-        cv::imshow("Zhang-Suen",ZhangSuen);
+            cvThreshold(src_w,src_w,2.99,1,CV_THRESH_BINARY);
+            cvThreshold(src_b,src_b,2.99,1,CV_THRESH_BINARY);
+            cvAnd(src_w, src_b, src_w);
 
-        //Guo-Hall work
-        time.start();
-        thinningGuoHall(GuoHall);
-        qDebug()<<"Guo-Hall worked = "<<time.elapsed();
-        cv::imshow("Guo-Hall",GuoHall);
+            sum += cvSum(src_w).val[0];
 
-        //Stentiford work
-        time.start();
-        StentifordThinning(Stentiford);
-        qDebug()<<"Stentiford worked = "<<time.elapsed();
-        cv::imshow("Stentiford",Stentiford);
+            cvXor(src_f, src_w, src_f);
 
+            cvCopyImage(src_f, src_w);
+            cvThreshold(src_f,src_b,0.5,1,CV_THRESH_BINARY_INV);
+          }
+        }
+
+         qDebug()<<"Japaneese worked = "<<time.elapsed();
+
+        cvConvertScaleAbs(src_f, dst, 255, 0);
+
+
+
+        cvNamedWindow("dst",1);
+        cvShowImage("dst", dst);
+
+        //японский
 
         cv::waitKey(900000);
 
