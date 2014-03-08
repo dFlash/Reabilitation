@@ -387,6 +387,9 @@ int main(int argc, char* argv[])
         cvThreshold(src_f,src_w,0.5,1.0,CV_THRESH_BINARY);
         cvThreshold(src_f,src_b,0.5,1.0,CV_THRESH_BINARY_INV);
 
+        cvNamedWindow("1");
+        cvShowImage("1",src_f);
+
         double sum=1;
 
         time.start();
