@@ -11,7 +11,8 @@
 
 using namespace std;
 
-const short threshold =85;//80 for test 6  110 for test 3
+const short threshold =35;//80 for test 6  110 for test 3
+cv::Rect roi(1,1,630,312);
 inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore);
 inline void getSkeleton(cv::Mat& fore);
 inline void StentifordThinning(cv::Mat& fore);
@@ -217,6 +218,11 @@ void thinningGuoHall(cv::Mat& im)
 
 //not my func END
 
+
+inline void featuresDetect(cv::Mat& skeletonImg);
+
+
+
 int main(int argc, char* argv[])
 {
 
@@ -224,8 +230,9 @@ int main(int argc, char* argv[])
 
     CvCapture* capture = NULL;
 
+
     //capture = cvCaptureFromCAM(0);
-    capture = cvCaptureFromFile("test6.webm");
+    capture = cvCaptureFromFile("test7.webm");
 
 
     cv::Mat curr_frame,background,testImg(480,640,CV_8U);
@@ -242,6 +249,8 @@ int main(int argc, char* argv[])
 
 //    cv::BackgroundSubtractorMOG2 bgsub;
 //    std::vector<std::vector<cv::Point> > contours;
+
+    cv::Mat fore_roi;
 
  //японский
     CvMat** kpb = new CvMat *[8];
@@ -280,18 +289,25 @@ int main(int argc, char* argv[])
 
               setForeground(background,curr_frame,foreground);
               cv::erode(foreground,foreground,cv::Mat());
-//              cv::erode(foreground,foreground,cv::Mat());
-//              cv::erode(foreground,foreground,cv::Mat());
-//              cv::erode(foreground,foreground,cv::Mat());
-//              cv::erode(foreground,foreground,cv::Mat());
+              cv::erode(foreground,foreground,cv::Mat());
+              cv::erode(foreground,foreground,cv::Mat());
+              cv::erode(foreground,foreground,cv::Mat());
+              cv::erode(foreground,foreground,cv::Mat());
 //              cv::dilate(foreground,foreground,cv::Mat());
               cv::dilate(foreground,foreground,cv::Mat());
               cv::dilate(foreground,foreground,cv::Mat());
-               cv::dilate(foreground,foreground,cv::Mat());
               cv::dilate(foreground,foreground,cv::Mat());
               cv::dilate(foreground,foreground,cv::Mat());
               cv::dilate(foreground,foreground,cv::Mat());
+              cv::dilate(foreground,foreground,cv::Mat());
+              cv::dilate(foreground,foreground,cv::Mat());
+//              cv::dilate(foreground,foreground,cv::Mat());
+//              cv::dilate(foreground,foreground,cv::Mat());
+//              cv::dilate(foreground,foreground,cv::Mat());
+//              cv::dilate(foreground,foreground,cv::Mat());
 
+              fore_roi = foreground(roi);
+              cv::imshow("ROI",fore_roi);
               //for test6 - 1 er 1 dil
               //for test3 - 1 er 7 dil
 
@@ -302,14 +318,14 @@ int main(int argc, char* argv[])
 //                      getSkeleton(foreground);
 //              cv::imshow("Ros",foreground);
 
-            cv::imshow("Fore",foreground);
+            //cv::imshow("Fore",foreground);
 //            cv::imshow("Background",background);
 
         }
 
         if(gui.flagTestImg)
         {
-            foreground.copyTo(testImg);
+            fore_roi.copyTo(testImg);
             gui.flagTestImg=false;
             break;
         }
@@ -330,50 +346,50 @@ int main(int argc, char* argv[])
 
     }
 
-//        cv::Mat ZhangSuen,GuoHall,Rosenfeld,Stentiford, morph,morphSkel;
+        cv::Mat ZhangSuen,GuoHall,Rosenfeld,Stentiford, morph,morphSkel;
 
-//        testImg.copyTo(ZhangSuen);
-//        testImg.copyTo(GuoHall);
-//        testImg.copyTo(Rosenfeld);
-//        testImg.copyTo(Stentiford);
-//        testImg.copyTo(morph);
+        testImg.copyTo(ZhangSuen);
+        testImg.copyTo(GuoHall);
+        testImg.copyTo(Rosenfeld);
+        testImg.copyTo(Stentiford);
+        testImg.copyTo(morph);
 
           QTime time;
 
-//        //morphology work
-//        time.start();
-//        morphSkel = morphSkeleton(morph);
-//        qDebug()<<"Morphology worked = "<<time.elapsed();
-//        cv::imshow("morphology",morphSkel);
+        //morphology work
+        time.start();
+        morphSkel = morphSkeleton(morph);
+        qDebug()<<"Morphology worked = "<<time.elapsed();
+        cv::imshow("morphology",morphSkel);
 
-//        //Rosenfeld work
-//        time.start();
-//        getSkeleton(Rosenfeld);
-//        qDebug()<<"Rosenfeld worked = "<<time.elapsed();
-//        cv::imshow("Rosenfeld",Rosenfeld);
+        //Rosenfeld work
+        time.start();
+        getSkeleton(Rosenfeld);
+        qDebug()<<"Rosenfeld worked = "<<time.elapsed();
+        cv::imshow("Rosenfeld",Rosenfeld);
 
-//        //Zhang-Suen work
-//        time.start();
-//        thinning(ZhangSuen);
-//        qDebug()<<"Zhang-Suen worked = "<<time.elapsed();
-//        cv::imshow("Zhang-Suen",ZhangSuen);
+        //Zhang-Suen work
+        time.start();
+        thinning(ZhangSuen);
+        qDebug()<<"Zhang-Suen worked = "<<time.elapsed();
+        cv::imshow("Zhang-Suen",ZhangSuen);
 
-//        //Guo-Hall work
-//        time.start();
-//        thinningGuoHall(GuoHall);
-//        qDebug()<<"Guo-Hall worked = "<<time.elapsed();
-//        cv::imshow("Guo-Hall",GuoHall);
+        //Guo-Hall work
+        time.start();
+        thinningGuoHall(GuoHall);
+        qDebug()<<"Guo-Hall worked = "<<time.elapsed();
+        cv::imshow("Guo-Hall",GuoHall);
 
-//        //Stentiford work
-//        time.start();
-//        StentifordThinning(Stentiford);
-//        qDebug()<<"Stentiford worked = "<<time.elapsed();
-//        cv::imshow("Stentiford",Stentiford);
+        //Stentiford work
+        time.start();
+        StentifordThinning(Stentiford);
+        qDebug()<<"Stentiford worked = "<<time.elapsed();
+        cv::imshow("Stentiford",Stentiford);
 
         //японский
 
 
-        src = foreground.operator IplImage();
+        src = fore_roi.operator IplImage();
 
 
         IplImage* dst = cvCloneImage(&src);
@@ -456,6 +472,7 @@ inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore)
 
           }
       }
+
 }
 
 inline void getSkeleton(cv::Mat& fore)
