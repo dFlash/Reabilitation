@@ -11,6 +11,281 @@
 
 using namespace std;
 
+
+//код для трекинга
+int currLeftHandY=175,currLeftHandX=50;
+int currRightHandY = 131,currRightHandX=434;
+
+int currLeftElbowY=213,currLeftElbowX=148;
+int currRightElbowY = 197,currRightElbowX=370;
+
+int leftSize=0, rightSize=0;
+
+const int step = 50;
+
+bool firstIter = true;
+
+int moveL[8][2]={
+//                 {-1, 1},
+//                 {0, 1},
+//                 {1, 1},
+//                 {1, 0},
+//                 {1, -1},
+//                 {0, -1},
+//                 {-1, -1},
+//                 {-1, 0}
+//                };
+
+{1, -1},
+{1, 0},
+{1, 1},
+{0, 1},
+{-1, 1},
+{-1, 0},
+{-1, -1},
+{0, -1}
+};
+
+int moveR[8][2]={
+    {1, 1},
+    {1, 0},
+    {1, -1},
+    {0, -1},
+    {-1, -1},
+    {-1, 0},
+    {-1, 1},
+    {0, 1}
+
+    };
+inline void getForearmSize(cv::Mat& img,bool isFirst);
+
+inline void initTrack(cv::Mat& gray, bool isFirst)
+{
+    //левая ладонь
+
+    for(int i = currLeftHandY-step; i < currLeftHandY+step; i++)
+    {
+        for(int j = currLeftHandX-step; j < currLeftHandX+step; j++)
+        {
+            if (gray.at<uchar>(i,j)!=255)
+            {
+                continue;
+            }
+            else
+            {
+                uchar p2 = gray.at<uchar>(i-1, j);
+                uchar p3 = gray.at<uchar>(i-1, j+1);
+                uchar p4 = gray.at<uchar>(i, j+1);
+                uchar p5 = gray.at<uchar>(i+1, j+1);
+
+                uchar p6 = gray.at<uchar>(i+1, j);
+                uchar p7 = gray.at<uchar>(i+1, j-1);
+                uchar p8 = gray.at<uchar>(i, j-1);
+                uchar p9 = gray.at<uchar>(i-1, j-1);
+
+                if ((p2+p3+p4+p5+p6+p7+p8+p9)==255)
+                {
+                    currLeftHandY = i;
+                    currLeftHandX = j;
+                    break;
+                }
+            }
+        }
+    }
+
+    //правая ладонь
+
+    for(int i = currRightHandY-step; i < currRightHandY+step; i++)
+    {
+        for(int j = currRightHandX-step; j < currRightHandX+step; j++)
+        {
+            if (gray.at<uchar>(i,j)!=255)
+            {
+                continue;
+            }
+            else
+            {
+                uchar p2 = gray.at<uchar>(i-1, j);
+                uchar p3 = gray.at<uchar>(i-1, j+1);
+                uchar p4 = gray.at<uchar>(i, j+1);
+                uchar p5 = gray.at<uchar>(i+1, j+1);
+
+                uchar p6 = gray.at<uchar>(i+1, j);
+                uchar p7 = gray.at<uchar>(i+1, j-1);
+                uchar p8 = gray.at<uchar>(i, j-1);
+                uchar p9 = gray.at<uchar>(i-1, j-1);
+
+                if ((p2+p3+p4+p5+p6+p7+p8+p9)==255)
+                {
+                    currRightHandY = i;
+                    currRightHandX = j;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (isFirst)
+    {
+
+    //левый локоть
+    int elbowLeftX = 0, elbowLeftY = 0;
+    for(int i = currLeftElbowY-step; i < currLeftElbowY+step; i++)
+    {
+        for(int j = currLeftElbowX-step; j < currLeftElbowX+step; j++)
+        {
+            if (gray.at<uchar>(i,j)!=255)
+            {
+                continue;
+            }
+            else
+            {
+                if (i>elbowLeftY)
+                {
+                    elbowLeftY=i;
+                    elbowLeftX=j;
+                }
+            }
+        }
+    }
+
+    currLeftElbowY=elbowLeftY;
+    currLeftElbowX=elbowLeftX;
+
+
+    //правый локоть
+    int elbowRightX = 0, elbowRightY = 0;
+    for(int i = currRightElbowY-step; i < currRightElbowY+step; i++)
+    {
+        for(int j = currRightElbowX-step; j < currRightElbowX+step; j++)
+        {
+            if (gray.at<uchar>(i,j)!=255)
+            {
+                continue;
+            }
+            else
+            {
+                if (i>elbowRightY)
+                {
+                    elbowRightY=i;
+                    elbowRightX=j;
+                }
+            }
+        }
+    }
+
+    currRightElbowY=elbowRightY;
+    currRightElbowX=elbowRightX;
+
+
+    getForearmSize(gray,true);
+
+    }//end_if
+    else
+    {
+        getForearmSize(gray,false);
+    }
+
+
+
+
+}
+
+inline void getForearmSize(cv::Mat& img,bool isFirst)
+{
+    cv::Mat tempImg;
+    img.copyTo(tempImg);
+
+    int tempLX = currLeftHandX, tempLY = currLeftHandY;
+
+    int tempRX = currRightHandX, tempRY = currRightHandY;
+
+    if (isFirst)
+    {
+    while ((tempLX != currLeftElbowX) || (tempLY != currLeftElbowY))
+    {
+        for (int i=0;i<8;i++)
+        {
+            if(tempImg.at<uchar>(tempLY+moveL[i][0],tempLX+moveL[i][1])==255)
+            {
+                tempImg.at<uchar>(tempLY,tempLX)=0;
+                leftSize++;
+                tempLX+=moveL[i][1];
+                tempLY+=moveL[i][0];
+
+
+                break;
+            }
+        }
+
+
+    }
+
+    while ((tempRX != currRightElbowX) || (tempRY != currRightElbowY))
+    {
+        for (int i=0;i<8;i++)
+        {
+            if(tempImg.at<uchar>(tempRY+moveR[i][0],tempRX+moveR[i][1])!=0)
+            {
+                tempImg.at<uchar>(tempRY,tempRX)=0;
+                tempRX+=moveR[i][1];
+                tempRY+=moveR[i][0];
+                rightSize++;
+                break;
+            }
+        }
+
+        qDebug()<<"tempRX = "<<tempRX<<" tempRY = "<<tempRY;
+        qDebug()<<"currRightHandX = "<<currRightHandX<<" currRightHandY = "<<currRightHandY;
+        qDebug()<<"currRightElbowX = "<<currRightElbowX<<" currRightElbowY = "<<currRightElbowY;
+
+    }
+
+
+
+    }
+    else
+    {
+        for (int i = 0; i < leftSize; i++)
+        {
+            for (int i=0;i<8;i++)
+            {
+                if(tempImg.at<uchar>(tempLY+moveL[i][0],tempLX+moveL[i][1])==255)
+                {
+                    tempImg.at<uchar>(tempLY,tempLX)=0;
+                    tempLX+=moveL[i][1];
+                    tempLY+=moveL[i][0];
+                    break;
+                }
+            }
+        }
+
+        currLeftElbowY=tempLY;
+        currLeftElbowX=tempLX;
+
+
+        for (int i = 0; i < rightSize; i++)
+        {
+            for (int i=0;i<8;i++)
+            {
+                if(tempImg.at<uchar>(tempRY+moveR[i][0],tempRX+moveR[i][1])!=0)
+                {
+                    //tempImg.at<uchar>(tempRY,tempRX)=0;
+                    tempRX+=moveR[i][1];
+                    tempRY+=moveR[i][0];
+                    break;
+                }
+            }
+        }
+
+        currRightElbowY=tempRY;
+        currRightElbowX=tempRX;
+    }
+
+}
+
+//код для трекинга КОНЕЦ
+
 const short threshold =35;//80 for test 6  110 for test 3
 cv::Rect roi(1,1,630,312);
 inline void setForeground(cv::Mat& back, cv::Mat& curr, cv::Mat& fore);
@@ -261,14 +536,23 @@ int main(int argc, char* argv[])
 
  //японский  код
 
+     unsigned int count = 1;
+
 
         while(true)
     {
 
+            if (count%2==0)
+            {
+                count++;
+                continue;
+            }
+
+            count++;
 
         curr_frame = cvQueryFrame(capture);
 
-        cv::imshow("Camera",curr_frame);
+
 
          //японский
 
@@ -286,31 +570,6 @@ int main(int argc, char* argv[])
         if (gui.flag)
         {
 
-
-              setForeground(background,curr_frame,foreground);
-              cv::erode(foreground,foreground,cv::Mat());
-              cv::erode(foreground,foreground,cv::Mat());
-              cv::erode(foreground,foreground,cv::Mat());
-              cv::erode(foreground,foreground,cv::Mat());
-              cv::erode(foreground,foreground,cv::Mat());
-//              cv::dilate(foreground,foreground,cv::Mat());
-              cv::dilate(foreground,foreground,cv::Mat());
-              cv::dilate(foreground,foreground,cv::Mat());
-              cv::dilate(foreground,foreground,cv::Mat());
-              cv::dilate(foreground,foreground,cv::Mat());
-              cv::dilate(foreground,foreground,cv::Mat());
-              cv::dilate(foreground,foreground,cv::Mat());
-              cv::dilate(foreground,foreground,cv::Mat());
-//              cv::dilate(foreground,foreground,cv::Mat());
-//              cv::dilate(foreground,foreground,cv::Mat());
-//              cv::dilate(foreground,foreground,cv::Mat());
-//              cv::dilate(foreground,foreground,cv::Mat());
-
-              fore_roi = foreground(roi);
-              cv::imshow("ROI",fore_roi);
-              //for test6 - 1 er 1 dil
-              //for test3 - 1 er 7 dil
-
              //       thinning(foreground);
             //getSkeleton(foreground);
 
@@ -325,10 +584,48 @@ int main(int argc, char* argv[])
 
         if(gui.flagTestImg)
         {
-            fore_roi.copyTo(testImg);
-            gui.flagTestImg=false;
-            break;
+            setForeground(background,curr_frame,foreground);
+            cv::erode(foreground,foreground,cv::Mat());
+            cv::erode(foreground,foreground,cv::Mat());
+            cv::erode(foreground,foreground,cv::Mat());
+            cv::erode(foreground,foreground,cv::Mat());
+            cv::erode(foreground,foreground,cv::Mat());
+
+            cv::dilate(foreground,foreground,cv::Mat());
+            cv::dilate(foreground,foreground,cv::Mat());
+            cv::dilate(foreground,foreground,cv::Mat());
+            cv::dilate(foreground,foreground,cv::Mat());
+            cv::dilate(foreground,foreground,cv::Mat());
+            cv::dilate(foreground,foreground,cv::Mat());
+            cv::dilate(foreground,foreground,cv::Mat());
+
+            fore_roi = foreground(roi);
+            cv::imshow("ROI",fore_roi);
+
+            thinning(fore_roi);
+
+
+            initTrack(fore_roi,firstIter);
+            firstIter = false;
+
+
+            cv::imshow("Zhang-Suen",fore_roi);
+
+            cv::ellipse(curr_frame,cv::Point(currLeftHandX,currLeftHandY),cv::Size(10,10),100,0,360,cv::Scalar(255,0,0));
+            cv::ellipse(curr_frame,cv::Point(currRightHandX,currRightHandY),cv::Size(10,10),100,0,360,cv::Scalar(255,0,0));
+
+            cv::ellipse(curr_frame,cv::Point(currLeftElbowX,currLeftElbowY),cv::Size(10,10),100,0,360,cv::Scalar(255,0,0));
+            cv::ellipse(curr_frame,cv::Point(currRightElbowX,currRightElbowY),cv::Size(10,10),100,0,360,cv::Scalar(255,0,0));
+
+
+
+
+            //fore_roi.copyTo(testImg);
+            //gui.flagTestImg=false;
+            //break;
         }
+
+        cv::imshow("Camera",curr_frame);
 
  //       cv::imshow("test",testImg);
 
