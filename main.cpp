@@ -611,6 +611,8 @@ int main(int argc, char* argv[])
 
             cv::imshow("Zhang-Suen",fore_roi);
 
+            cv::waitKey(3000);
+
             cv::ellipse(curr_frame,cv::Point(currLeftHandX,currLeftHandY),cv::Size(10,10),100,0,360,cv::Scalar(255,0,0));
             cv::ellipse(curr_frame,cv::Point(currRightHandX,currRightHandY),cv::Size(10,10),100,0,360,cv::Scalar(255,0,0));
 

@@ -18,7 +18,7 @@ GUI::GUI(QWidget *parent):QWidget(parent)
 
         connect(push_exit,SIGNAL(clicked()),this,SLOT(slot_exit()));
 
-        QPushButton* pushTestImg = new QPushButton("TestImg",this);
+        QPushButton* pushTestImg = new QPushButton("Process",this);
         pushTestImg->setGeometry(10,70,100,30);
 
         connect(pushTestImg,SIGNAL(clicked()),this,SLOT(slot_TestImg()));
